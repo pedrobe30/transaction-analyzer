@@ -21,6 +21,8 @@ detecção automática de bandeiras e geração de relatórios Excel profissiona
 
 ---
 
+# Você pode acessar aqui: [Análises para você](https://transaction-analyzer-pb.streamlit.app/)
+
 ## 🎯 Sobre o projeto
 
 Pequenas e médias empresas geram diariamente dados de transações financeiras em planilhas manuais ou exportações de ERPs — dados bagunçados, com erros e sem nenhuma análise. O **Transaction Analyzer** resolve isso:
@@ -144,6 +146,7 @@ streamlit run src/app.py
 
 Acesse `http://localhost:8501` no browser. Faça upload de um dos CSVs gerados e clique em **Analisar Transações**.
 
+### ou acesse o modelo já pronto aqui: [Transaction Analyzer](https://transaction-analyzer-pb.streamlit.app/)
 ---
 
 ## 📁 Estrutura do projeto
