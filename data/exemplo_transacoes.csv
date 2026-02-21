@@ -1,0 +1,39 @@
+id_transacao,data,numero_cartao,valor,tipo_pagamento,produto,quantidade,status
+TXN-0012,2026-01-15,4539578763621486,199.9,digital,Tênis Casual Urbano,1,aprovada
+TXN-0037,,5105105105105100,99.9,debito,Camiseta Básica,1,aprovada
+TXN-0025,2026-01-23,4532015112830366,149.7,credito,Boné Aba Reta,3,aprovada
+TXN-0010,2026-01-09,4556737586899855,179.7,digital,Camiseta Básica,3,aprovada
+TXN-0007,2025-11-18,5425233430109903,49.9,credito,Boné Aba Reta,1,aprovada
+TXN-0013,2025-12-25,4716184876496380,280.0,credito,Tênis Running Pro,1,aprovada
+TXN-0006,2025-11-29,4556737586899855,59.9,digital,Camiseta Básica,1,aprovada
+TXN-0035,2026-01-29,5105105105105108,99.8,digital,Boné Aba Reta,2,recusada
+TXN-0001,2026-01-21,4916338506082832,379.8,credito,Mochila Esportiva,2,aprovada
+TXN-0014,2025-11-05,6362970000457013,49.9,credito,Boné Aba Reta,1,aprovada
+TXN-0020,2026-01-17,5425233430109903,689.7,credito,Jaqueta Corta-Vento,3,recusada
+TXN-0017,2025-11-28,4556737586899855,179.8,digital,Cinto de Couro,2,recusada
+TXN-0033,2025-11-01,6362970000457019,599.7,debito,Tênis Casual Urbano,3,recusada
+TXN-0004,2025-12-06,5105105105105100,229.9,digital,Jaqueta Corta-Vento,1,aprovada
+TXN-0009,2026-01-26,4916338506082832,79.8,credito,Meias Kit com 6,2,aprovada
+TXN-0027,2026-01-09,4916338506082832,39.9,digital,Meias Kit com 6,1,aprovada
+TXN-0011,2025-11-12,4929420243600962,189.9,debito,Mochila Esportiva,1,recusada
+TXN-0032,2025-12-06,5425233430109907,239.7,credito,Shorts Academia,3,recusada
+TXN-0024,2026-01-31,5425233430109903,99.8,credito,Boné Aba Reta,2,recusada
+TXN-0026,2026-01-29,4716184876496380,149.7,digital,Boné Aba Reta,3,aprovada
+TXN-0002,2025-11-15,6362970000457013,119.8,debito,Camiseta Básica,2,aprovada
+TXN-0021,2025-11-04,6362970000457013,179.8,digital,Cinto de Couro,2,aprovada
+TXN-0023,2025-11-26,4532015112830366,399.8,digital,Tênis Casual Urbano,2,aprovada
+TXN-0003,2025-11-04,5425233430109903,840.0,debito,Tênis Running Pro,3,aprovada
+TXN-0031,2026-01-15,4532015112830361,179.7,credito,Camiseta Básica,3,recusada
+TXN-0028,2025-12-24,5105105105105100,79.8,credito,Meias Kit com 6,2,aprovada
+TXN-0030,2025-12-28,5200828282828210,89.9,credito,Cinto de Couro,1,recusada
+TXN-0036,2025-12-25,6362970000457013,,credito,Tênis Running Pro,1,aprovada
+TXN-0018,2025-11-30,4916338506082832,189.9,digital,Mochila Esportiva,1,recusada
+TXN-0019,2026-01-04,5425233430109903,280.0,credito,Tênis Running Pro,1,aprovada
+TXN-0001,2026-01-21,4916338506082832,379.8,credito,Mochila Esportiva,2,aprovada
+TXN-0022,2026-01-11,4929420243600962,840.0,digital,Tênis Running Pro,3,aprovada
+TXN-0005,2025-12-02,4716184876496380,179.8,digital,Cinto de Couro,2,aprovada
+TXN-0015,2025-11-04,5200828282828210,159.8,digital,Shorts Academia,2,recusada
+TXN-0016,2025-11-12,4916338506082832,49.9,credito,Boné Aba Reta,1,aprovada
+TXN-0008,2025-11-14,6362970000457013,99.8,digital,Boné Aba Reta,2,aprovada
+TXN-0029,2025-11-29,5105105105105100,79.8,credito,Meias Kit com 6,2,aprovada
+TXN-0034,2025-11-21,4929420243600965,599.7,digital,Tênis Casual Urbano,3,recusada
