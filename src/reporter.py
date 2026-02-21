@@ -2,290 +2,234 @@ import io
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.chart import BarChart, PieChart, Reference
+from openpyxl.chart import BarChart, Reference
 from openpyxl.utils import get_column_letter
 
 
-COR_AZUL   = "003399"  # azul principal — cabeçalhos
-COR_AZUL_CLARO = "D6E4FF"  # azul suave — linhas alternadas
-COR_AMARELO    = "FFF3CD"  # amarelo suave — destaques de KPI
-COR_VERDE      = "D4EDDA"  # verde — valores positivos
-COR_VERMELHO   = "F8D7DA"  # vermelho suave — auditoria / alertas
-COR_CINZA      = "F5F5F5"  # cinza claro — linhas alternadas
-COR_BRANCO     = "FFFFFF"
+COR_CABECALHO_PRINCIPAL = "0F172A"  # Slate 900 (Azul muito escuro/Chumbo)
+COR_CABECALHO_TABELA    = "1E293B"  # Slate 800
+COR_FUNDO_CABECALHO     = "F8FAFC"  # Fundo principal super claro
+COR_TEXTO_PADRAO        = "334155"  # Cinza escuro para leitura confortável
+COR_DESTAQUE            = "2563EB"  # Azul vibrante apenas para números/KPIs
 
+COR_LINHA_PAR           = "FFFFFF"  # Branco
+COR_LINHA_IMPAR         = "F1F5F9"  # Slate 100 (Cinza muito sutil)
 
-def _fonte_cabecalho(tamanho: int = 11) -> Font:
-    return Font(name="Arial", bold=True, color="FFFFFF", size=tamanho)
+COR_KPI_FUNDO           = "FFFFFF"
+COR_KPI_BORDA           = "E2E8F0"
 
-def _fonte_normal(tamanho: int = 10, negrito: bool = False) -> Font:
-    return Font(name="Arial", size=tamanho, bold=negrito)
+COR_SUCESSO_FUNDO       = "ECFDF5"  # Verde pastel
+COR_SUCESSO_TEXTO       = "047857"
+COR_ALERTA_FUNDO        = "FEF2F2"  # Vermelho pastel
+COR_ALERTA_TEXTO        = "B91C1C"
+
+def _fonte(tamanho=10, negrito=False, cor=COR_TEXTO_PADRAO, nome="Segoe UI") -> Font:
+  
+    return Font(name=nome, size=tamanho, bold=negrito, color=cor)
 
 def _fundo(cor: str) -> PatternFill:
     return PatternFill("solid", start_color=cor, fgColor=cor)
 
-def _borda_fina() -> Border:
-    lado = Side(style="thin", color="CCCCCC")
-    return Border(left=lado, right=lado, top=lado, bottom=lado)
+def _alinhamento(h="left", v="center", wrap=False) -> Alignment:
+    return Alignment(horizontal=h, vertical=v, wrap_text=wrap)
 
-def _centralizado() -> Alignment:
-    return Alignment(horizontal="center", vertical="center", wrap_text=True)
+def _borda_inferior_sutil() -> Border:
+    linha = Side(style="thin", color="CBD5E1")
+    return Border(bottom=linha)
 
-def _esquerda() -> Alignment:
-    return Alignment(horizontal="left", vertical="center")
-
-
-def _cabecalho_aba(ws, titulo: str, subtitulo: str) -> None:
-    """Escreve o cabeçalho padrão no topo de cada aba."""
-    ws.merge_cells("A1:H1")
-    ws["A1"] = titulo
-    ws["A1"].font = Font(name="Arial", bold=True, size=16, color="FFFFFF")
-    ws["A1"].fill = _fundo(COR_AZUL)
-    ws["A1"].alignment = _centralizado()
-    ws.row_dimensions[1].height = 35
-
-    ws.merge_cells("A2:H2")
-    ws["A2"] = subtitulo
-    ws["A2"].font = Font(name="Arial", size=10, color="555555", italic=True)
-    ws["A2"].alignment = _centralizado()
-    ws.row_dimensions[2].height = 20
+def _borda_caixa() -> Border:
+    linha = Side(style="thin", color=COR_KPI_BORDA)
+    return Border(left=linha, right=linha, top=linha, bottom=linha)
 
 
-def _linha_cabecalho_tabela(ws, linha: int, colunas: list[str]) -> None:
-    for col_idx, texto in enumerate(colunas, start=1):
-        cel = ws.cell(row=linha, column=col_idx, value=texto)
-        cel.font = _fonte_cabecalho()
-        cel.fill = _fundo(COR_AZUL)
-        cel.alignment = _centralizado()
-        cel.border = _borda_fina()
 
+def _preparar_aba(ws, titulo: str, subtitulo: str) -> None:
+    
+    ws.sheet_view.showGridLines = False
 
-def _linha_dados(ws, linha: int, valores: list, alternada: bool = False) -> None:
-    cor = COR_CINZA if alternada else COR_BRANCO
-    for col_idx, valor in enumerate(valores, start=1):
-        cel = ws.cell(row=linha, column=col_idx, value=valor)
-        cel.font = _fonte_normal()
-        cel.fill = _fundo(cor)
-        cel.border = _borda_fina()
-        cel.alignment = _esquerda()
+    # Fundo do cabeçalho
+    for col in range(1, 15):
+        for row in range(1, 4):
+            ws.cell(row=row, column=col).fill = _fundo(COR_FUNDO_CABECALHO)
 
+    # Título principal
+    ws.merge_cells("B2:H2")
+    ws["B2"] = titulo
+    ws["B2"].font = _fonte(tamanho=18, negrito=True, cor=COR_CABECALHO_PRINCIPAL)
+    ws["B2"].alignment = _alinhamento("left")
+    ws.row_dimensions[2].height = 28
+
+    # Subtítulo
+    ws.merge_cells("B3:H3")
+    ws["B3"] = subtitulo
+    ws["B3"].font = _fonte(tamanho=10, cor="64748B")
+    ws["B3"].alignment = _alinhamento("left")
+    ws.row_dimensions[3].height = 18
 
 def _ajustar_colunas(ws, larguras: list[int]) -> None:
-    for i, largura in enumerate(larguras, start=1):
+   
+    ws.column_dimensions['A'].width = 3 
+    for i, largura in enumerate(larguras, start=2):
         ws.column_dimensions[get_column_letter(i)].width = largura
+
+def _desenhar_cabecalho_tabela(ws, linha: int, colunas: list[str]) -> None:
+    for col_idx, texto in enumerate(colunas, start=2):
+        cel = ws.cell(row=linha, column=col_idx, value=texto)
+        cel.font = _fonte(tamanho=10, negrito=True, cor="FFFFFF")
+        cel.fill = _fundo(COR_CABECALHO_TABELA)
+        cel.alignment = _alinhamento("left")
+        ws.row_dimensions[linha].height = 20
+
+def _desenhar_linha_dados(ws, linha: int, valores: list, alternada: bool = False, alerta: bool = False) -> None:
+    cor_fundo = COR_LINHA_IMPAR if alternada else COR_LINHA_PAR
+    if alerta:
+        cor_fundo = COR_ALERTA_FUNDO
+        
+    for col_idx, valor in enumerate(valores, start=2): 
+        cel = ws.cell(row=linha, column=col_idx, value=valor)
+        cel.font = _fonte(tamanho=10, cor=COR_ALERTA_TEXTO if alerta else COR_TEXTO_PADRAO)
+        cel.fill = _fundo(cor_fundo)
+        cel.alignment = _alinhamento("left")
+        cel.border = _borda_inferior_sutil()
+    ws.row_dimensions[linha].height = 18
 
 
 def _aba_resumo(wb: Workbook, metricas: dict) -> None:
-
     ws = wb.active
     ws.title = "Resumo Executivo"
-
-    _cabecalho_aba(
-        ws,
-        "Resumo Executivo — Transaction Analyzer",
-        "Análise de transações com validação de cartões pelo Algoritmo de Luhn"
-    )
+    _preparar_aba(ws, "Resumo Executivo", "Análise de performance e saúde das transações.")
 
     kpis = [
-        ("Faturamento Total",    f"R$ {metricas['faturamento_total']:,.2f}",    COR_VERDE),
-        ("Ticket Médio",         f"R$ {metricas['ticket_medio']:,.2f}",         COR_AMARELO),
-        ("Taxa de Aprovação",    f"{metricas['taxa_aprovacao']}%",              COR_VERDE),
-        ("Total de Transações",  str(metricas['total_transacoes']),             COR_AZUL_CLARO),
-        ("Aprovadas",            str(metricas['total_aprovadas']),              COR_VERDE),
-        ("Recusadas",            str(metricas['total_recusadas']),              COR_VERMELHO),
+        ("Faturamento Total",    f"R$ {metricas['faturamento_total']:,.2f}",    COR_DESTAQUE),
+        ("Ticket Médio",         f"R$ {metricas['ticket_medio']:,.2f}",         COR_TEXTO_PADRAO),
+        ("Taxa de Aprovação",    f"{metricas['taxa_aprovacao']}%",              COR_SUCESSO_TEXTO),
+        ("Total de Transações",  str(metricas['total_transacoes']),             COR_TEXTO_PADRAO),
+        ("Aprovadas",            str(metricas['total_aprovadas']),              COR_SUCESSO_TEXTO),
+        ("Recusadas (Luhn)",     str(metricas['total_recusadas']),              COR_ALERTA_TEXTO),
     ]
 
-    
-    linha_atual = 4
-    for i, (rotulo, valor, cor) in enumerate(kpis):
-        col_inicio = (i % 3) * 2 + 1  # colunas 1, 3, 5
+    linha_atual = 5
+
+    for i, (rotulo, valor, cor_valor) in enumerate(kpis):
+        col_inicio = (i % 3) * 2 + 2  
         col_fim    = col_inicio + 1
 
-     
         if i > 0 and i % 3 == 0:
             linha_atual += 4
 
-        ws.merge_cells(
-            start_row=linha_atual, start_column=col_inicio,
-            end_row=linha_atual,   end_column=col_fim
-        )
-        cel_rotulo = ws.cell(row=linha_atual, column=col_inicio, value=rotulo)
-        cel_rotulo.font = Font(name="Arial", bold=True, size=10, color="333333")
-        cel_rotulo.fill = _fundo(COR_AZUL_CLARO)
-        cel_rotulo.alignment = _centralizado()
-        cel_rotulo.border = _borda_fina()
-        ws.row_dimensions[linha_atual].height = 22
+   
+        ws.merge_cells(start_row=linha_atual, start_column=col_inicio, end_row=linha_atual, end_column=col_fim)
+        cel_rotulo = ws.cell(row=linha_atual, column=col_inicio, value=rotulo.upper())
+        cel_rotulo.font = _fonte(tamanho=8, negrito=True, cor="94A3B8")
+        cel_rotulo.fill = _fundo(COR_KPI_FUNDO)
+        cel_rotulo.alignment = _alinhamento("center")
+        cel_rotulo.border = Border(left=Side(style="thin", color=COR_KPI_BORDA), top=Side(style="thin", color=COR_KPI_BORDA), right=Side(style="thin", color=COR_KPI_BORDA))
+        ws.row_dimensions[linha_atual].height = 20
 
-     
-        ws.merge_cells(
-            start_row=linha_atual + 1, start_column=col_inicio,
-            end_row=linha_atual + 1,   end_column=col_fim
-        )
+
+        ws.merge_cells(start_row=linha_atual + 1, start_column=col_inicio, end_row=linha_atual + 1, end_column=col_fim)
         cel_valor = ws.cell(row=linha_atual + 1, column=col_inicio, value=valor)
-        cel_valor.font = Font(name="Arial", bold=True, size=14, color="003399")
-        cel_valor.fill = _fundo(cor)
-        cel_valor.alignment = _centralizado()
-        cel_valor.border = _borda_fina()
+        cel_valor.font = _fonte(tamanho=16, negrito=True, cor=cor_valor)
+        cel_valor.fill = _fundo(COR_KPI_FUNDO)
+        cel_valor.alignment = _alinhamento("center")
+        cel_valor.border = Border(left=Side(style="thin", color=COR_KPI_BORDA), bottom=Side(style="thin", color=COR_KPI_BORDA), right=Side(style="thin", color=COR_KPI_BORDA))
         ws.row_dimensions[linha_atual + 1].height = 30
 
-    
-    _ajustar_colunas(ws, [22, 22, 22, 22, 22, 22])
-
+    _ajustar_colunas(ws, [18, 5, 18, 5, 18, 5])
 
 def _aba_periodo(wb: Workbook, metricas: dict) -> None:
-
     ws = wb.create_sheet("Por Período")
     df = metricas["faturamento_por_periodo"]
+    _preparar_aba(ws, "Faturamento por Período", "Receita mensal consolidada (apenas transações aprovadas).")
 
-    _cabecalho_aba(ws, "Faturamento por Período", "Receita mensal de transações aprovadas")
-
-    # --- Tabela ---
-    _linha_cabecalho_tabela(ws, 4, ["Período", "Faturamento (R$)"])
+    _desenhar_cabecalho_tabela(ws, 5, ["Período", "Faturamento"])
 
     for i, row in df.iterrows():
-        linha = 5 + list(df.index).index(i)
-        _linha_dados(ws, linha, [str(row["periodo"]), row["faturamento"]], alternada=linha % 2 == 0)
-        
-        ws.cell(row=linha, column=2).number_format = 'R$ #,##0.00'
-
-
-    ultima_linha_dados = 4 + len(df)
-    linha_total = ultima_linha_dados + 1
-    ws.cell(row=linha_total, column=1, value="TOTAL").font = _fonte_normal(negrito=True)
-    ws.cell(row=linha_total, column=1).fill = _fundo(COR_AZUL)
-    ws.cell(row=linha_total, column=1).font = _fonte_cabecalho()
-    ws.cell(row=linha_total, column=1).alignment = _centralizado()
-
-    ws.cell(row=linha_total, column=2,
-            value=f"=SUM(B5:B{ultima_linha_dados})").number_format = 'R$ #,##0.00'
-    ws.cell(row=linha_total, column=2).font = _fonte_cabecalho()
-    ws.cell(row=linha_total, column=2).fill = _fundo(COR_AZUL)
-    ws.cell(row=linha_total, column=2).alignment = _centralizado()
-
-  
-    chart = BarChart()
-    chart.type = "col"          
-    chart.title = "Faturamento por Período"
-    chart.y_axis.title = "R$"
-    chart.x_axis.title = "Período"
-    chart.style = 10
-    chart.width = 20
-    chart.height = 12
-
-    dados = Reference(ws, min_col=2, min_row=4, max_row=4 + len(df))
-    categorias = Reference(ws, min_col=1, min_row=5, max_row=4 + len(df))
-    chart.add_data(dados, titles_from_data=True)
-    chart.set_categories(categorias)
-
-    ws.add_chart(chart, f"D4")
-
-    _ajustar_colunas(ws, [18, 20, 5, 20])
-
-
-
-
-def _aba_produtos(wb: Workbook, metricas: dict) -> None:
-   
-    ws = wb.create_sheet("Top Produtos")
-    df = metricas["top_produtos"]
-
-    _cabecalho_aba(ws, "Top Produtos", "Produtos com maior faturamento em transações aprovadas")
-
-    _linha_cabecalho_tabela(ws, 4, ["#", "Produto", "Faturamento (R$)", "Unidades Vendidas"])
-
-    for i, row in enumerate(df.itertuples(), start=1):
-        linha = 4 + i
-        _linha_dados(
-            ws, linha,
-            [i, row.produto, row.faturamento, int(row.quantidade_vendida)],
-            alternada=i % 2 == 0
-        )
+        linha = 6 + list(df.index).index(i)
+        _desenhar_linha_dados(ws, linha, [str(row["periodo"]), row["faturamento"]], alternada=linha % 2 == 0)
         ws.cell(row=linha, column=3).number_format = 'R$ #,##0.00'
 
-    _ajustar_colunas(ws, [6, 30, 22, 20])
+    chart = BarChart()
+    chart.type = "col"
+    chart.style = 2  
+    chart.title = None 
+    chart.y_axis.title = "Faturamento (R$)"
+    chart.width = 18
+    chart.height = 10
+    
+
+    dados = Reference(ws, min_col=3, min_row=5, max_row=5 + len(df))
+    categorias = Reference(ws, min_col=2, min_row=6, max_row=5 + len(df))
+    chart.add_data(dados, titles_from_data=True)
+    chart.set_categories(categorias)
+    
+  
+    chart.legend = None 
+
+    ws.add_chart(chart, "E5")
+    _ajustar_colunas(ws, [20, 20])
+
+def _aba_produtos(wb: Workbook, metricas: dict) -> None:
+    ws = wb.create_sheet("Top Produtos")
+    df = metricas["top_produtos"]
+    _preparar_aba(ws, "Performance de Produtos", "Curva ABC de produtos por volume de faturamento.")
+
+    _desenhar_cabecalho_tabela(ws, 5, ["Ranking", "Produto", "Faturamento", "Volume (Qtd)"])
+
+    for i, row in enumerate(df.itertuples(), start=1):
+        linha = 5 + i
+        _desenhar_linha_dados(
+            ws, linha,
+            [f"#{i}", row.produto, row.faturamento, int(row.quantidade_vendida)],
+            alternada=i % 2 == 0
+        )
+        ws.cell(row=linha, column=4).number_format = 'R$ #,##0.00'
+      
+        ws.cell(row=linha, column=2).alignment = _alinhamento("center")
+        ws.cell(row=linha, column=5).alignment = _alinhamento("center")
+
+    _ajustar_colunas(ws, [10, 35, 20, 15])
 
 def _aba_auditoria(wb: Workbook, df_suspeitos: pd.DataFrame) -> None:
     ws = wb.create_sheet("Auditoria")
-
-    _cabecalho_aba(
-        ws,
-        " Auditoria — Transações Suspeitas",
-        "Transações com número de cartão inválido identificadas pelo Algoritmo de Luhn"
-    )
+    _preparar_aba(ws, "Relatório de Auditoria", "Transações bloqueadas pelo Algoritmo de Luhn (Potencial Fraude).")
 
     if df_suspeitos.empty:
-        ws.merge_cells("A4:G4")
-        ws["A4"] = "Nenhuma transação suspeita identificada."
-        ws["A4"].font = Font(name="Arial", bold=True, size=12, color="155724")
-        ws["A4"].fill = _fundo(COR_VERDE)
-        ws["A4"].alignment = _centralizado()
+        ws["B5"] = "Nenhuma transação suspeita encontrada na base de dados."
+        ws["B5"].font = _fonte(tamanho=11, negrito=True, cor=COR_SUCESSO_TEXTO)
         return
 
-    colunas = ["ID Transação", "Data", "Nº Cartão", "Valor (R$)",
-               "Tipo Pagamento", "Status", "Motivo da Suspeita"]
-    _linha_cabecalho_tabela(ws, 4, colunas)
+    colunas = ["ID", "Data", "Nº Cartão", "Valor", "Status", "Motivo"]
+    _desenhar_cabecalho_tabela(ws, 5, colunas)
 
     for i, row in enumerate(df_suspeitos.itertuples(), start=1):
-        linha = 4 + i
+        linha = 5 + i
         data_str = str(row.data)[:10] if hasattr(row, "data") else ""
         valores = [
             getattr(row, "id_transacao", ""),
             data_str,
             getattr(row, "numero_cartao", ""),
             getattr(row, "valor", ""),
-            getattr(row, "tipo_pagamento", ""),
             getattr(row, "status", ""),
-            getattr(row, "motivo_auditoria", ""),
+            getattr(row, "motivo_auditoria", "Falha de validação (Luhn)"),
         ]
-        _linha_dados(ws, linha, valores, alternada=i % 2 == 0)
+       
+        _desenhar_linha_dados(ws, linha, valores, alerta=True)
+        ws.cell(row=linha, column=5).number_format = 'R$ #,##0.00'
 
-        for col in range(1, 8):
-            ws.cell(row=linha, column=col).fill = _fundo(
-                COR_VERMELHO if i % 2 == 0 else "FDE8E8"
-            )
-        ws.cell(row=linha, column=4).number_format = 'R$ #,##0.00'
-
-    _ajustar_colunas(ws, [14, 14, 20, 16, 16, 12, 40])
-
-def gerar_relatorio(
-    metricas: dict,
-    df_suspeitos: pd.DataFrame,
-    df_validos: pd.DataFrame = None,
-) -> bytes:
-    wb = Workbook()
-
-    _aba_resumo(wb, metricas)
-    _aba_periodo(wb, metricas)
-    _aba_produtos(wb, metricas)
-    _aba_auditoria(wb, df_suspeitos)
-
-    if df_validos is not None:
-        _aba_verificadas(wb, df_validos)
-
-    buffer = io.BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-
-    return buffer.getvalue()
+    _ajustar_colunas(ws, [12, 14, 20, 15, 12, 35])
 
 def _aba_verificadas(wb: Workbook, df_validos: pd.DataFrame) -> None:
     from brand_detector import enriquecer_dataframe
-
-    ws = wb.create_sheet("✅ Transações Verificadas")
+    ws = wb.create_sheet("Transações Verificadas")
     df = enriquecer_dataframe(df_validos)
+    _preparar_aba(ws, "Base Verificada", "Lista completa de transações aprovadas e mascaradas para segurança (LGPD).")
 
-    _cabecalho_aba(
-        ws,
-        "✅ Transações Verificadas",
-        "Transações com cartão válido pelo Algoritmo de Luhn — número mascarado por segurança"
-    )
-
-    colunas = ["ID Transação", "Data", "Bandeira", "Cartão (mascarado)",
-               "Valor (R$)", "Tipo Pagamento", "Produto", "Status"]
-    _linha_cabecalho_tabela(ws, 4, colunas)
+    colunas = ["ID", "Data", "Bandeira", "Cartão (Mascarado)", "Valor", "Método", "Status"]
+    _desenhar_cabecalho_tabela(ws, 5, colunas)
 
     for i, row in enumerate(df.itertuples(), start=1):
-        linha = 4 + i
+        linha = 5 + i
         data_str = str(row.data)[:10] if hasattr(row, "data") else ""
         bandeira_txt = f"{getattr(row, 'bandeira_emoji', '')} {getattr(row, 'bandeira', '')}"
         valores = [
@@ -295,10 +239,24 @@ def _aba_verificadas(wb: Workbook, df_validos: pd.DataFrame) -> None:
             getattr(row, "cartao_mascarado", ""),
             getattr(row, "valor", ""),
             getattr(row, "tipo_pagamento", ""),
-            getattr(row, "produto", ""),
             getattr(row, "status", ""),
         ]
-        _linha_dados(ws, linha, valores, alternada=i % 2 == 0)
-        ws.cell(row=linha, column=5).number_format = 'R$ #,##0.00'
+        _desenhar_linha_dados(ws, linha, valores, alternada=i % 2 == 0)
+        ws.cell(row=linha, column=6).number_format = 'R$ #,##0.00'
 
-    _ajustar_colunas(ws, [14, 13, 18, 22, 15, 16, 28, 12])
+    _ajustar_colunas(ws, [12, 14, 18, 22, 15, 15, 12])
+
+def gerar_relatorio(metricas: dict, df_suspeitos: pd.DataFrame, df_validos: pd.DataFrame = None) -> bytes:
+    wb = Workbook()
+    
+    _aba_resumo(wb, metricas)
+    _aba_periodo(wb, metricas)
+    _aba_produtos(wb, metricas)
+    _aba_auditoria(wb, df_suspeitos)
+    if df_validos is not None:
+        _aba_verificadas(wb, df_validos)
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
